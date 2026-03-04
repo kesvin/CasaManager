@@ -172,13 +172,11 @@ export function loadData(){
   if (process.env.NODE_ENV === 'production' && !demoEnabled) {
     try{
       const raw = localStorage.getItem(STORE_KEY)
-      if(!raw) return {
-        accounts: [], owners: [], categories: [], budgets: [], fixedExpenses: [], improvements: [], houseDocuments: [], houseContacts: [], expenses: []
-      }
+      if(!raw) return defaultData()
       return JSON.parse(raw)
     }catch(e){
       console.error(e)
-      return { accounts: [], owners: [], categories: [], budgets: [], fixedExpenses: [], improvements: [], houseDocuments: [], houseContacts: [], expenses: [] }
+      return defaultData()
     }
   }
 
