@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>CasaManager</title>
+	<style>
+		:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;--bg:#f6f7fb;--card:#fff;--muted:#666;--text:#111}
+		:root[data-theme='dark']{--bg:#0f1720;--card:#0b1220;--muted:#9aa4b2;--text:#e6eef8}
+		*{box-sizing:border-box}
+		body{margin:0;padding:20px;background:var(--bg);color:var(--text)}
+		.container{max-width:980px;margin:0 auto;padding:0 12px}
+		header h1{margin:0 0 6px;font-size:20px}
+		.grid{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
+		.card{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.06);color:var(--text)}
+		label{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+		input,select,textarea{width:100%;padding:8px;margin-top:4px;border:1px solid #e3e6ee;border-radius:6px;background:var(--card);color:var(--text)}
+		select, input[type="date"], input[type="number"]{appearance:none}
+		button{margin-top:10px;padding:8px 12px;border-radius:6px;border:0;background:#0b76ef;color:#fff;cursor:pointer}
+		.small{font-size:13px}
+		.table-responsive{overflow:auto;max-width:100%}
+		table{width:100%;border-collapse:collapse;margin-top:8px;min-width:0}
+		th,td{padding:6px;border-bottom:1px solid #eef;white-space:nowrap}
+		.right{text-align:right}
+		.muted{color:var(--muted)}
+		.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+		.controls button{flex:0 0 auto}
+		.summary-item{display:flex;justify-content:space-between;padding:6px 0}
+		.admin-card{background:linear-gradient(180deg,#fff7f0,#fff);border:1px solid #ffd9b3}
+		/* dark mode adjustments */
+		:root[data-theme='dark'] .admin-card{background:linear-gradient(180deg,#0f1725,#0b1220);border-color:#2b2f3a}
+		.owner-icon{display:inline-block;vertical-align:middle;margin-right:8px}
+		.amount{font-weight:600}
+		.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+		.modal.show{display:flex}
+		.modal-content{background:var(--card);border-radius:12px;padding:20px;max-width:92vw;box-shadow:0 4px 12px rgba(0,0,0,.2);width:100%;box-sizing:border-box}
+		.modal-content h3{margin-top:0}
+		.budget-highlight{background:linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%);border:2px solid #ffc107;padding:12px;border-radius:8px;margin-bottom:12px}
+		.budget-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+		.budget-progress{width:100%;height:6px;background:#e3e6ee;border-radius:3px;margin-top:4px}
+		.budget-bar{height:100%;background:#28a745;border-radius:3px}
+		.budget-bar.warn{background:#ffc107}
+		.budget-bar.over{background:#e24}
+		.budget-over{color:#e24;font-weight:700;margin-left:8px}
+		:root[data-theme='dark'] .budget-highlight{background:linear-gradient(135deg,#2a2f3a 0%,#1d2228 100%);border:2px solid #444}
+		:root[data-theme='dark'] .budget-bar{background:#2ecc71}
+		:root[data-theme='dark'] .budget-bar.warn{background:#f39c12}
+		:root[data-theme='dark'] .budget-bar.over{background:#e74c3c}
+
+		/* Responsive rules */
+		@media (max-width: 900px){
+			.grid{grid-template-columns:1fr}
+			aside{order:-1}
+			section{order:1}
+			.card{padding:10px}
+			.container{padding:0 10px}
+			table{min-width:480px}
+		}
+
+		@media (max-width:480px){
+			body{padding:12px}
+			header h1{font-size:18px}
+			.controls button{flex:1 1 100%;margin-top:6px}
+			.grid{gap:12px}
+			table{min-width:420px}
+		}
+
+		/* Chart container: fixed height to avoid growing with large values */
+		.chart-wrap{height:200px;overflow:hidden}
+		.chart-wrap canvas{width:100% !important;height:100% !important;display:block}
+		.card.chart-card{display:flex;flex-direction:column}
+	</style>
+</head>
+<body>
+	<div style="position:fixed;right:18px;top:14px;z-index:1200">
+		<label style="display:flex;align-items:center;gap:8px;background:transparent;padding:6px;border-radius:20px">
+			<input id="themeToggle" type="checkbox" /> Modo oscuro
+		</label>
+	</div>
+	<div class="container">
+		<header>
+			<h1>CasaManager</h1>
+			<div class="muted small">Aplicación personal. Los datos se guardan en tu navegador (localStorage).</div>
+		</header>
+
+		<main class="grid" style="margin-top:16px">
+			<section>
+				<div class="card">
+					<h3>Añadir gasto</h3>
+					<div>
+						<label>Cuenta</label>
+						<select id="selAccount"></select>
+
+						<label>Persona</label>
+						<select id="selOwner"></select>
+
+						<label>Categoría</label>
+						<select id="selCategory"></select>
+
+						<label>Monto</label>
+						<input id="inpAmount" type="number" step="0.01" />
+
+						<label>Fecha</label>
+						<input id="inpDate" type="date" />
+
+						<label>Descripción</label>
+						<input id="inpDesc" type="text" />
+
+						<button id="btnAddExpense">Guardar gasto</button>
+					</div>
+				</div>
+
+				<div class="card" style="margin-top:12px">
+					<h3>Gastos recientes</h3>
+					<div class="table-responsive">
+						<table id="tblExpenses">
+							<thead><tr><th>Fecha</th><th>Cuenta</th><th>Persona</th><th>Categoría</th><th>Descripción</th><th class="right">Monto</th><th>Acción</th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+
+				<div class="card admin-card" style="margin-top:12px">
+					<h3>Administrar</h3>
+					<div style="display:flex;gap:8px">
+						<div style="flex:1">
+							<label>Cuenta nueva</label>
+							<input id="inpNewAccount" />
+							<button id="btnAddAccount">Añadir cuenta</button>
+						</div>
+						<div style="flex:1">
+							<label>Categoría nueva</label>
+							<input id="inpNewCategory" />
+							<button id="btnAddCategory">Añadir categoría</button>
+						</div>
+					</div>
+				<div style="margin-top:12px">
+					<h4>Personas</h4>
+					<label>Nueva persona</label>
+					<div style="display:flex;gap:8px;margin-top:6px">
+						<input id="inpNewOwner" placeholder="Nombre (ej. Kevin)" />
+						<button id="btnAddOwner">Añadir</button>
+					</div>
+					<div id="ownersList" style="margin-top:8px"></div>
+				</div>
+
+				<div style="margin-top:12px">
+					<h4>Presupuestos mensuales</h4>
+					<div id="budgetInputs"></div>
+				</div>
+
+				<div style="margin-top:10px" class="controls">
+					<button id="btnExport">Exportar JSON</button>
+					<button id="btnImport">Importar JSON</button>
+					<input id="fileImport" type="file" accept="application/json" style="display:none" />
+					<button id="btnClear" style="background:#e24">Borrar datos</button>
+				</div>
+			</div>
+			</section>
+
+			<aside>
+				<div class="card">
+					<div class="budget-highlight">
+						<h3 style="margin:0 0 10px">Presupuestos mensual</h3>
+						<div id="budgets"></div>
+					</div>
+				</div>
+
+				<div class="card">
+					<h3>Balances por cuenta</h3>
+					<div id="balances"></div>
+				</div>
+
+				<div class="card" style="margin-top:12px">
+					<h3>Resumen mes</h3>
+					<label>Mes</label>
+					<input id="inpMonth" type="month" />
+					<div id="monthSummary" style="margin-top:8px"></div>
+				</div>
+
+				<div class="card chart-card" style="margin-top:12px">
+					<h3>Gráfico por categoría</h3>
+					<div class="chart-wrap">
+						<canvas id="catChart"></canvas>
+					</div>
+				</div>
+			</aside>
+
+			<div id="reassignModal" class="modal">
+				<div class="modal-content">
+					<h3>Reasignar gastos</h3>
+					<p id="reassignMsg" style="margin:10px 0"></p>
+					<label>Selecciona persona para reasignar:</label>
+					<select id="reassignSelect"></select>
+					<div style="display:flex;gap:8px;margin-top:16px">
+						<button id="btnReassignOk" style="flex:1">Reasignar</button>
+						<button id="btnReassignCancel" style="flex:1;background:#999">Cancelar</button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script>
+		// Theme handling
+		const THEME_KEY = 'gastos_theme';
+		const themeToggle = document.getElementById('themeToggle');
+		function applyTheme(t){
+			if(t==='dark'){document.documentElement.setAttribute('data-theme','dark'); themeToggle.checked=true;}else{document.documentElement.removeAttribute('data-theme'); themeToggle.checked=false}
+			localStorage.setItem(THEME_KEY,t);
+			// update chart colors when theme changes
+			if(typeof renderChart === 'function') setTimeout(renderChart, 10);
+		}
+		const savedTheme = localStorage.getItem(THEME_KEY) || 'light'; applyTheme(savedTheme);
+		themeToggle.addEventListener('change',()=>applyTheme(themeToggle.checked?'dark':'light'));
+
+		// Data model stored in localStorage under 'gastosData'
+		const STORE_KEY = 'gastosData_v1';
+
+		function defaultData(){
+			return {
+				accounts: [{id:1,name:'Efectivo'},{id:2,name:'Tarjeta'}],
+				owners: [{id:1,name:'Kevin',icon:'male'},{id:2,name:'Alba',icon:'female'}],
+				categories: [{id:1,name:'Comida'},{id:2,name:'Servicios'},{id:3,name:'Transporte'}],
+				budgets: [{owner_id:1,amount:500},{owner_id:2,amount:500}],
+				expenses: []
+			};
+		}
+
+		function loadData(){
+			try{
+				const raw = localStorage.getItem(STORE_KEY);
+				if(!raw) return defaultData();
+				return JSON.parse(raw);
+			}catch(e){console.error(e);return defaultData();}
+		}
+		function saveData(){localStorage.setItem(STORE_KEY,JSON.stringify(state));}
+
+		let state = loadData();
+
+		// Utilities
+		function nextId(arr){return arr.length?Math.max(...arr.map(x=>x.id))+1:1}
+		function formatMoney(v){return Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €'}
+
+		function getOwnerIconSvg(type, size=16){
+			if(type==='female') return `<svg class="owner-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="7" r="3.2" stroke="#ff6b9a" stroke-width="1.4" fill="#ffd6e0"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#ff6b9a" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`;
+			return `<svg class="owner-svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="7" r="3.2" stroke="#4a90e2" stroke-width="1.4" fill="#d7eaff"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#4a90e2" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`;
+		}
+
+		// DOM refs
+		const selAccount = document.getElementById('selAccount');
+		const selOwner = document.getElementById('selOwner');
+		const selCategory = document.getElementById('selCategory');
+		const inpAmount = document.getElementById('inpAmount');
+		const inpDate = document.getElementById('inpDate');
+		const inpDesc = document.getElementById('inpDesc');
+		const btnAddExpense = document.getElementById('btnAddExpense');
+		const tblBody = document.querySelector('#tblExpenses tbody');
+		const balancesDiv = document.getElementById('balances');
+		const budgetsDiv = document.getElementById('budgets');
+		const budgetInputs = document.getElementById('budgetInputs');
+		const inpNewAccount = document.getElementById('inpNewAccount');
+		const inpNewCategory = document.getElementById('inpNewCategory');
+		const btnAddAccount = document.getElementById('btnAddAccount');
+		const btnAddCategory = document.getElementById('btnAddCategory');
+		const inpNewOwner = document.getElementById('inpNewOwner');
+		const btnAddOwner = document.getElementById('btnAddOwner');
+		const ownersList = document.getElementById('ownersList');
+		const inpMonth = document.getElementById('inpMonth');
+		const monthSummary = document.getElementById('monthSummary');
+		const btnExport = document.getElementById('btnExport');
+		const btnImport = document.getElementById('btnImport');
+		const fileImport = document.getElementById('fileImport');
+		const btnClear = document.getElementById('btnClear');
+		const reassignModal = document.getElementById('reassignModal');
+		const reassignSelect = document.getElementById('reassignSelect');
+		const reassignMsg = document.getElementById('reassignMsg');
+		const btnReassignOk = document.getElementById('btnReassignOk');
+		const btnReassignCancel = document.getElementById('btnReassignCancel');
+		let chartInstance = null;
+
+	// Generate a palette that adapts to the current theme (lighter in light mode, muted in dark)
+	function getChartColors(count){
+		const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		const colors = [];
+		for(let i=0;i<count;i++){
+			const hue = (i * 47) % 360;
+			const sat = isDark ? 60 : 72;
+			const light = isDark ? 48 : 56;
+			colors.push(`hsl(${hue} ${sat}% ${light}%)`);
+		}
+		return colors;
+	}
+
+		// Renderers
+		function renderSelects(){
+			selAccount.innerHTML = '';
+			state.accounts.forEach(a=>{
+				const opt = document.createElement('option'); opt.value = a.id; opt.textContent = a.name; selAccount.appendChild(opt);
+			});
+			selCategory.innerHTML = '<option value="">(sin categoría)</option>';
+			state.categories.forEach(c=>{const opt=document.createElement('option');opt.value=c.id;opt.textContent=c.name;selCategory.appendChild(opt)});
+
+			selOwner.innerHTML = '';
+			state.owners.forEach(o=>{const opt=document.createElement('option');opt.value=o.id;opt.textContent=o.name;selOwner.appendChild(opt)});
+		}
+
+		function renderExpenses(){
+			tblBody.innerHTML='';
+			const sorted = state.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));
+			for(const e of sorted.slice(0,200)){
+				const tr=document.createElement('tr');
+				const dateTd=document.createElement('td'); dateTd.textContent=e.date; tr.appendChild(dateTd);
+				const acc = state.accounts.find(x=>x.id===e.account_id)?.name||'—';
+				const owner = state.owners.find(x=>x.id===e.owner_id)?.name||'';
+				const cat = state.categories.find(x=>x.id===e.category_id)?.name||'';
+				tr.appendChild(Object.assign(document.createElement('td'),{textContent:acc}));
+				const ownerTd = document.createElement('td');
+				const ownerObj = state.owners.find(x=>x.id===e.owner_id) || {name:owner};
+				ownerTd.innerHTML = `<span class="owner-icon">${getOwnerIconSvg(ownerObj.icon)}</span>${ownerObj.name}`;
+				tr.appendChild(ownerTd);
+				tr.appendChild(Object.assign(document.createElement('td'),{textContent:cat}));
+				tr.appendChild(Object.assign(document.createElement('td'),{textContent:e.description||'—'}));
+				tr.appendChild(Object.assign(document.createElement('td'),{innerHTML:`<span class="amount">${formatMoney(e.amount)}</span>`,className:'right'}));
+				const actTd = document.createElement('td');
+				const delBtn = document.createElement('button'); delBtn.textContent='Eliminar'; delBtn.style.background='#e24'; delBtn.style.padding='6px 8px'; delBtn.addEventListener('click',()=>{
+					if(!confirm('Eliminar gasto?')) return;
+					state.expenses = state.expenses.filter(x=>x.id!==e.id);
+					saveData(); renderExpenses(); renderBalances(); renderBudgets(); renderMonthSummary(); renderChart();
+				});
+				actTd.appendChild(delBtn); tr.appendChild(actTd);
+				tblBody.appendChild(tr);
+			}
+		}
+
+		function renderBalances(){
+			const sums = {};
+			for(const a of state.accounts) sums[a.id]=0;
+			for(const e of state.expenses) if(sums[e.account_id]!==undefined) sums[e.account_id]+=Number(e.amount);
+			balancesDiv.innerHTML='';
+			state.accounts.forEach(a=>{
+				const div = document.createElement('div'); div.className='summary-item';
+				div.innerHTML = `<div>${a.name}</div><div>${formatMoney(sums[a.id]||0)}</div>`;
+				balancesDiv.appendChild(div);
+			});
+
+			// Totals por persona
+			const ownerSums = {};
+			state.owners.forEach(o=>ownerSums[o.id]=0);
+			for(const e of state.expenses) if(ownerSums[e.owner_id]!==undefined) ownerSums[e.owner_id]+=Number(e.amount);
+			const ownersWrap = document.createElement('div'); ownersWrap.style.marginTop = '10px';
+			ownersWrap.innerHTML = '<strong>Totales por persona</strong>';
+			state.owners.forEach(o=>{
+				const div = document.createElement('div'); div.className='summary-item';
+				const left = document.createElement('div'); left.innerHTML = `<span class="owner-icon">${getOwnerIconSvg(o.icon)}</span>${o.name}`;
+				const right = document.createElement('div'); right.innerHTML = `<span class="amount">${formatMoney(ownerSums[o.id]||0)}</span>`;
+				div.appendChild(left); div.appendChild(right);
+				ownersWrap.appendChild(div);
+			});
+			balancesDiv.appendChild(ownersWrap);
+		}
+
+		function renderBudgets(){
+			budgetsDiv.innerHTML='';
+			const now = new Date();
+			const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+			const [year,month] = currentMonth.split('-');
+			const start = `${year}-${month}-01`;
+			const end = `${year}-${month}-31`;
+
+			state.owners.forEach(o=>{
+				const budget = state.budgets?.find(b=>b.owner_id===o.id)?.amount || 0;
+				const spent = state.expenses.filter(e=>e.owner_id===o.id && e.date>=start && e.date<=end).reduce((s,e)=>s+Number(e.amount),0);
+				const pct = budget>0?(spent/budget*100):0;
+				const barClass = pct>100?'over':pct>80?'warn':'';
+
+				const row = document.createElement('div'); row.className='budget-row';
+				const name = document.createElement('div');
+				name.innerHTML = `<strong><span class="owner-icon">${getOwnerIconSvg(o.icon)}</span>${o.name}</strong><br><small>${formatMoney(spent)} / ${formatMoney(budget)}</small>`;
+				const bar = document.createElement('div'); bar.className='budget-progress';
+				const fill = document.createElement('div'); fill.className=`budget-bar ${barClass}`; fill.style.width = Math.min(pct,100)+'%';
+				bar.appendChild(fill);
+				row.appendChild(name);
+				row.appendChild(bar);
+				if(spent>budget){
+					const over = document.createElement('div'); over.className='budget-over'; over.textContent = '+' + formatMoney(spent-budget);
+					over.style.marginLeft='8px';
+					row.appendChild(over);
+				}
+				budgetsDiv.appendChild(row);
+			});
+		}
+
+		function renderBudgetInputs(){
+			budgetInputs.innerHTML='';
+			state.owners.forEach(o=>{
+				const budget = state.budgets?.find(b=>b.owner_id===o.id)?.amount || 0;
+				const wrap = document.createElement('div'); wrap.style.display='flex'; wrap.style.gap='8px'; wrap.style.marginTop='6px'; wrap.style.alignItems='center';
+				const label = document.createElement('label'); label.innerHTML = `<span class="owner-icon">${getOwnerIconSvg(o.icon)}</span>${o.name}`; label.style.flex='1'; label.style.margin='0';
+				const inp = document.createElement('input'); inp.type='number'; inp.value = budget; inp.step='0.01'; inp.style.flex='0 0 110px'; inp.style.textAlign='right';
+				inp.addEventListener('change',()=>{
+					let b = state.budgets.find(x=>x.owner_id===o.id);
+					if(!b){b = {owner_id:o.id,amount:0}; state.budgets.push(b);}
+					b.amount = Number(inp.value);
+					saveData(); renderBudgets();
+				});
+				wrap.appendChild(label); wrap.appendChild(inp);
+				budgetInputs.appendChild(wrap);
+			});
+		}
+
+		function renderMonthSummary(){
+			const m = inpMonth.value; if(!m){monthSummary.innerHTML='<div class="muted">Selecciona un mes</div>';return}
+			const [year,month]=m.split('-');
+			const start = `${year}-${month}-01`;
+			const end = `${year}-${month}-31`;
+			const filtered = state.expenses.filter(e=>e.date>=start && e.date<=end);
+			const byCat = {};
+			const byOwner = {};
+			state.owners.forEach(o=>byOwner[o.name]=0);
+			for(const e of filtered){
+				const cname = state.categories.find(c=>c.id===e.category_id)?.name||'(sin categoría)';
+				byCat[cname] = (byCat[cname]||0)+Number(e.amount);
+				const ownerName = state.owners.find(o=>o.id===e.owner_id)?.name||'(sin persona)';
+				byOwner[ownerName] = (byOwner[ownerName]||0)+Number(e.amount);
+			}
+			monthSummary.innerHTML = '';
+			for(const [k,v] of Object.entries(byCat).sort((a,b)=>b[1]-a[1])){
+				const div = document.createElement('div'); div.className='summary-item'; div.innerHTML=`<div>${k}</div><div>${formatMoney(v)}</div>`; monthSummary.appendChild(div);
+			}
+			// mostrar totales por persona en el mes
+			const ownerTitle = document.createElement('div'); ownerTitle.style.marginTop='8px'; ownerTitle.innerHTML = '<strong>Totales por persona (mes)</strong>';
+			monthSummary.appendChild(ownerTitle);
+			for(const [name,total] of Object.entries(byOwner)){
+				const div = document.createElement('div'); div.className='summary-item'; div.innerHTML = `<div>${name}</div><div>${formatMoney(total)}</div>`; monthSummary.appendChild(div);
+			}
+			if(!Object.keys(byCat).length) monthSummary.innerHTML='<div class="muted">No hay gastos para ese mes</div>';
+		}
+
+		// Render category chart using Chart.js (responsive, with tooltips)
+		function renderChart(){
+			const canvas = document.getElementById('catChart');
+			if(!canvas) return;
+			const ctx = canvas.getContext('2d');
+
+			// determine month to show (use selected month or current month)
+			const now = new Date();
+			const selMonth = inpMonth.value || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+			const start = `${selMonth}-01`; const end = `${selMonth}-31`;
+
+			const totals = {};
+			state.categories.forEach(c=>totals[c.name]=0);
+			state.expenses.filter(e=>e.date>=start && e.date<=end).forEach(e=>{
+				const cname = state.categories.find(c=>c.id===e.category_id)?.name||'(sin categoría)';
+				totals[cname] = (totals[cname]||0)+Number(e.amount);
+			});
+
+			const items = Object.entries(totals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+			if(!items.length){
+				if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
+				ctx.clearRect(0,0,canvas.width,canvas.height);
+				ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted') || '#666';
+				ctx.font = '14px sans-serif';
+				ctx.fillText('Sin datos para el mes',10,20);
+				return;
+			}
+
+			const labels = items.map(i=>i[0]);
+			const data = items.map(i=>i[1]);
+
+			const textColor = (getComputedStyle(document.documentElement).getPropertyValue('--text') || '#111').trim();
+			const gridColor = (getComputedStyle(document.documentElement).getPropertyValue('--muted') || '#666').trim();
+
+			const colors = getChartColors(labels.length);
+			const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+			const hoverColors = labels.map((_,i)=>{
+				// slightly lighter for hover
+				const base = getChartColors(labels.length)[i];
+				return base.replace(/\)$/, ' / 0.95)') ;
+			});
+
+			if(chartInstance){
+				chartInstance.data.labels = labels;
+				chartInstance.data.datasets[0].data = data;
+				chartInstance.data.datasets[0].backgroundColor = colors;
+				chartInstance.data.datasets[0].borderColor = borderColor;
+				chartInstance.options.scales.x.ticks.color = textColor;
+				chartInstance.options.scales.x.grid.color = 'transparent';
+				chartInstance.options.scales.y.ticks.color = textColor;
+				chartInstance.options.scales.y.grid.color = gridColor;
+				chartInstance.update();
+				return;
+			}
+
+			chartInstance = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: 'Gastos',
+						data: data,
+						backgroundColor: colors,
+						borderColor: borderColor,
+						borderWidth: 1,
+						borderRadius: 8,
+						hoverBorderWidth: 1
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: { display: false },
+						tooltip: {
+							callbacks: {
+								label: function(context){
+									const v = context.parsed.y ?? context.parsed;
+									return formatMoney(v);
+								}
+							}
+						}
+					},
+					scales: {
+						x: { ticks: { color: textColor }, grid: { color: 'transparent' } },
+						y: { ticks: { color: textColor, callback: function(val){ return formatMoney(val); } }, grid: { color: gridColor } }
+					},
+					elements: {
+						bar: { borderRadius: 6 }
+					}
+				}
+			});
+		}
+
+		// Actions
+		btnAddExpense.addEventListener('click',()=>{
+			const account_id = Number(selAccount.value);
+			const owner_id = Number(selOwner.value);
+			const category_id = selCategory.value?Number(selCategory.value):null;
+			const amount = Number(inpAmount.value);
+			const date = inpDate.value || new Date().toISOString().slice(0,10);
+			const description = inpDesc.value||'';
+			if(!account_id || !amount || !owner_id){alert('Selecciona cuenta, persona y monto válido');return}
+			const id = nextId(state.expenses);
+			state.expenses.push({id,account_id,owner_id,category_id,amount,date,description});
+			saveData(); renderExpenses(); renderBalances(); renderBudgets(); renderMonthSummary();
+			inpAmount.value=''; inpDesc.value='';
+		});
+
+		btnAddAccount.addEventListener('click',()=>{
+			const name = inpNewAccount.value.trim(); if(!name) return; const id=nextId(state.accounts); state.accounts.push({id,name}); inpNewAccount.value=''; saveData(); renderSelects(); renderBalances();
+		});
+
+		btnAddCategory.addEventListener('click',()=>{
+			const name = inpNewCategory.value.trim(); if(!name) return; const id=nextId(state.categories); state.categories.push({id,name}); inpNewCategory.value=''; saveData(); renderSelects();
+		});
+
+		// Owners management
+		let pendingDeleteOwnerId = null;
+
+		function showReassignModal(ownerId,ownerName){
+			pendingDeleteOwnerId = ownerId;
+			reassignMsg.textContent = `${ownerName} tiene gastos. Selecciona a quién reasignarlos:`;
+			reassignSelect.innerHTML = '';
+			state.owners.filter(o=>o.id!==ownerId).forEach(o=>{
+				const opt = document.createElement('option'); opt.value = o.id; opt.textContent = o.name; reassignSelect.appendChild(opt);
+			});
+			reassignModal.classList.add('show');
+		}
+
+		function closeReassignModal(){
+			reassignModal.classList.remove('show');
+			pendingDeleteOwnerId = null;
+		}
+
+		function renderOwners(){
+			ownersList.innerHTML = '';
+			state.owners.forEach(o=>{
+				const wrap = document.createElement('div'); wrap.style.display='flex'; wrap.style.justifyContent='space-between'; wrap.style.alignItems='center'; wrap.style.marginTop='6px';
+				const nameDiv = document.createElement('div'); nameDiv.textContent = o.name; nameDiv.style.flex='1';
+				const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='6px';
+				const editBtn = document.createElement('button'); editBtn.textContent='Editar'; editBtn.style.background='#f0ad4e'; editBtn.style.padding='6px 8px'; editBtn.addEventListener('click',()=>{
+					const val = prompt('Nuevo nombre para '+o.name, o.name); if(!val) return; o.name = val.trim(); saveData(); renderSelects(); renderOwners(); renderBalances(); renderBudgets(); renderBudgetInputs(); renderMonthSummary();
+				});
+				const delBtn = document.createElement('button'); delBtn.textContent='Eliminar'; delBtn.style.background='#e24'; delBtn.style.padding='6px 8px'; delBtn.addEventListener('click',()=>{
+					if(!confirm('Eliminar a '+o.name+'?')) return;
+					const has = state.expenses.some(ex=>ex.owner_id===o.id);
+					if(has) {showReassignModal(o.id, o.name); return}
+					state.owners = state.owners.filter(x=>x.id!==o.id);
+					saveData(); renderSelects(); renderOwners(); renderBalances(); renderBudgets(); renderBudgetInputs(); renderMonthSummary();
+				});
+				actions.appendChild(editBtn); actions.appendChild(delBtn);
+				wrap.appendChild(nameDiv); wrap.appendChild(actions);
+				ownersList.appendChild(wrap);
+			});
+		}
+
+		btnReassignOk.addEventListener('click',()=>{
+			if(!pendingDeleteOwnerId) return;
+			const targetId = Number(reassignSelect.value);
+			state.expenses.forEach(ex=>{if(ex.owner_id===pendingDeleteOwnerId) ex.owner_id = targetId});
+			state.owners = state.owners.filter(x=>x.id!==pendingDeleteOwnerId);
+			saveData(); renderSelects(); renderOwners(); renderBalances(); renderBudgets(); renderBudgetInputs(); renderMonthSummary();
+			closeReassignModal();
+		});
+
+		btnReassignCancel.addEventListener('click', closeReassignModal);
+
+		btnAddOwner.addEventListener('click',()=>{
+			const name = inpNewOwner.value.trim(); if(!name) return; const id = nextId(state.owners); state.owners.push({id,name}); inpNewOwner.value=''; saveData(); renderSelects(); renderOwners(); renderBalances(); renderBudgets(); renderBudgetInputs();
+		});
+
+		inpMonth.addEventListener('change',renderMonthSummary);
+
+		btnExport.addEventListener('click',()=>{
+			const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+			const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='gastos-export.json'; a.click(); URL.revokeObjectURL(url);
+		});
+
+		btnImport.addEventListener('click',()=>fileImport.click());
+		fileImport.addEventListener('change',async(e)=>{
+			const f = e.target.files[0]; if(!f) return; const txt = await f.text(); try{state = JSON.parse(txt); saveData(); renderAll(); renderOwners(); renderBudgetInputs()}catch(err){alert('JSON inválido')}
+		});
+
+		btnClear.addEventListener('click',()=>{
+			if(!confirm('Borrar todos los datos? Esta acción NO se puede deshacer.')) return;
+			state = defaultData(); saveData(); renderAll(); renderOwners(); renderBudgetInputs();
+		});
+
+		function renderAll(){ renderSelects(); renderExpenses(); renderBalances(); renderBudgets(); renderMonthSummary(); renderChart(); }
+
+
+		// Init
+		(function init(){
+			// ensure IDs and required collections exist (migrate older localStorage)
+			state.accounts = state.accounts || [];
+			state.owners = state.owners || [{id:1,name:'Kevin'},{id:2,name:'Alba'}];
+			state.categories = state.categories || [];
+			state.budgets = state.budgets || state.owners.map(o=>({owner_id:o.id,amount:500}));
+			state.expenses = state.expenses || [];
+			// set default date in add form
+			inpDate.value = new Date().toISOString().slice(0,10);
+			// set current month
+			const now = new Date(); inpMonth.value = `${now.getFullYear().toString().padStart(4,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+			saveData(); renderAll();
+			// render owners list and budget inputs initially
+			renderOwners();
+			renderBudgetInputs();
+		})();
+
+		// Ensure chart resizes nicely when the window changes
+		window.addEventListener('resize', ()=>{ if(chartInstance) try{ chartInstance.resize(); }catch(e){} });
+	</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+﻿# Node and build
+node_modules/
+**/node_modules/
+.next/
+dist/
+build/
+*.log
+.env
+.env.local
+.env.*.local
+.vscode/
+.vercel/
+.idea/
+.DS_Store
+nextjs-app/.git.embedded.bak/
+nextjs-app/node_modules/
+nextjs-app/.next/
+.vercel
+
+# Ignore heavy build and deps
+nextjs-app/node_modules/
+nextjs-app/.next/
+nextjs-app/.git.embedded.bak/
+
