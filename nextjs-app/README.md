@@ -154,3 +154,10 @@ categories: [
 - [ ] Notificaciones push
 - [ ] Mobile app (React Native / Expo)
 
+## Limpieza y mantenimiento
+
+- Archivé scripts de mantenimiento sensibles en `nextjs-app/maintenance/scripts/`.
+- Los archivos de entorno con claves se movieron a `nextjs-app/maintenance/secrets/` y están **redactados** en el repositorio; coloca tus valores reales en `.env.local` localmente y no los compartas.
+- Ejecuta `npm run check:secrets` para verificar que no haya secretos en archivos rastreados.
+
+

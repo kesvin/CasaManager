@@ -366,9 +366,10 @@ export default function Header(){
         .mobile-hamburger-menu{display:none}
         @media (max-width:900px){
           .mobile-hamburger{display:inline-flex;position:absolute;right:12px;top:12px;background:transparent;border:0;color:var(--white);font-size:18px;padding:6px;border-radius:8px}
+          .mobile-hamburger:hover{color:var(--purple);background:transparent}
           .mobile-hamburger-menu{display:block;position:absolute;top:56px;left:12px;width:calc(100% - 24px);background:#000;border:1px solid var(--border);border-radius:10px;padding:8px;z-index:60}
           .mobile-hamburger-menu a{display:block;padding:8px 10px;color:var(--white);text-decoration:none;border-radius:8px;font-weight:700}
-          .mobile-hamburger-menu a:hover{background:rgba(227,20,103,0.12)}
+          .mobile-hamburger-menu a:hover{background:transparent;color:var(--purple)}
         }
       `}</style>
     </header>

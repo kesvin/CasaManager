@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.vercel/
+.git/
+*.log
+public/videos/
+public/videos/*
+**/*.mp4
+*.mp4
+dist/
+build/
+coverage/
+*.tgz
+tmp/
+*.env
+*.env.local
+*.DS_Store

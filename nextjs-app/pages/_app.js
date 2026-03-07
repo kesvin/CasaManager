@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import '../styles/globals.css'
 import Layout from '../components/Layout'
 import { GastosProvider } from '../contexts/GastosContext'
+import { SupabaseAuthProvider, useSupabaseAuth } from '../contexts/SupabaseAuth'
 import AppLogo from '../components/AppLogo'
 
 export default function App({ Component, pageProps }){
@@ -44,9 +46,30 @@ export default function App({ Component, pageProps }){
   }, [router])
 
   const isLandingPage = router.pathname === '/'
+  const { user, loading } = useSupabaseAuth()
+
+  // If not landing page and not authenticated, redirect to landing
+  useEffect(() => {
+    if(isLandingPage) return
+    if(loading) return
+    if(!user) router.replace('/')
+  }, [isLandingPage, loading, user, router])
 
   return (
-    <GastosProvider>
+    <SupabaseAuthProvider>
+      <GastosProvider>
+      <Head>
+        <title>CasaManager</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <meta name="application-name" content="CasaManager" />
+        <meta name="apple-mobile-web-app-title" content="CasaManager" />
+        <meta name="theme-color" content="#000000" />
+      </Head>
       {showSplash ? (
         <div className="app-splash" role="status" aria-live="polite" aria-label="Cargando aplicación">
           <div className="splash-logo-wrap">
@@ -91,6 +114,7 @@ export default function App({ Component, pageProps }){
           50% { transform: scale(1.04); opacity: 1; }
         }
       `}</style>
-    </GastosProvider>
+      </GastosProvider>
+    </SupabaseAuthProvider>
   )
 }

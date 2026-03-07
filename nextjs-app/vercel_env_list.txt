@@ -1,0 +1,20 @@
+Environment Variables for kevinboixs-projects/nextjs-app (snapshot)
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY   Encrypted   Production, Preview, Development
+NEXT_PUBLIC_SUPABASE_URL       Encrypted   Production, Preview, Development
+POSTGRES_URL_NON_POOLING       Encrypted   Production, Preview, Development
+SUPABASE_SECRET_KEY            Encrypted   Production, Preview, Development
+POSTGRES_HOST                  Encrypted   Production, Preview, Development
+SUPABASE_PUBLISHABLE_KEY       Encrypted   Production, Preview, Development
+SUPABASE_URL                   Encrypted   Production, Preview, Development
+POSTGRES_PRISMA_URL            Encrypted   Production, Preview, Development
+POSTGRES_DATABASE              Encrypted   Production, Preview, Development
+SUPABASE_SERVICE_ROLE_KEY      Encrypted   Production, Preview, Development
+POSTGRES_PASSWORD              Encrypted   Production, Preview, Development
+SUPABASE_JWT_SECRET           Encrypted   Production, Preview, Development
+POSTGRES_USER                  Encrypted   Production, Preview, Development
+POSTGRES_URL                   Encrypted   Production, Preview, Development
+SUPABASE_ANON_KEY              Encrypted   Production, Preview, Development
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY Encrypted Production, Preview, Development
+
+NOTE: Values are encrypted and not visible here. Keep this file private.

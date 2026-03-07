@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { loadData, saveData, nextId, defaultData } from '../lib/data'
+import { supabase } from '../lib/supabaseClient'
 
 const GastosContext = createContext(null)
 
@@ -10,8 +11,21 @@ export function GastosProvider({ children }){
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(()=>{
-    const loaded = loadData()
-    const defaults = defaultData()
+    const load = async () => {
+      const defaults = defaultData()
+      let loaded = null
+      try{
+        const useServer = String(process.env.NEXT_PUBLIC_USE_SERVER || 'false') === 'true'
+        if(useServer){
+          const res = await fetch('/api/state')
+          if(res.ok){
+            loaded = await res.json()
+          }
+        }
+      }catch(e){
+        console.error('Failed to load server state', e)
+      }
+      if(!loaded) loaded = loadData()
     // ensure owners has icons if missing
     if(!loaded.owners || loaded.owners.length === 0){
       loaded.owners = defaults.owners
@@ -37,7 +51,12 @@ export function GastosProvider({ children }){
     if(!loaded.houseContacts || !Array.isArray(loaded.houseContacts) || loaded.houseContacts.length === 0){
       loaded.houseContacts = defaults.houseContacts || []
     }
-    setState(loaded)
+      // ensure arrays exist
+      const merged = { ...defaults, ...loaded }
+      setState(merged)
+    }
+
+    load()
   }, [])
 
   const updateState = (newState) => {
@@ -46,11 +65,62 @@ export function GastosProvider({ children }){
   }
 
   // Actions
-  const addExpense = (expense) => {
+  const addExpense = async (expense) => {
     if(!state) return
+
+    // Try to persist on the server first (server sets user_id via auth)
+    try{
+      if(typeof window !== 'undefined' && supabase && supabase.auth){
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token
+
+        const payload = {
+          account_id: expense.account_id || null,
+          amount: expense.amount,
+          description: expense.description || null,
+          category: expense.category || expense.category_id || null,
+          metadata: expense.metadata || null
+        }
+
+        const headers = { 'Content-Type': 'application/json' }
+        if(token) headers['Authorization'] = `Bearer ${token}`
+
+        const res = await fetch('/api/gastos', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        })
+
+        if(res.ok){
+          const json = await res.json()
+          const serverRow = json.data
+          // Map server row into local expense shape (keep local owner_id)
+          const id = nextId(state.expenses)
+          const localExpense = {
+            id,
+            account_id: serverRow.account_id || expense.account_id,
+            owner_id: expense.owner_id,
+            category_id: serverRow.category || expense.category_id || null,
+            amount: Number(serverRow.amount || expense.amount),
+            date: serverRow.created_at ? String(serverRow.created_at).slice(0,10) : (expense.date || new Date().toISOString().slice(0,10)),
+            description: serverRow.description || expense.description || ''
+          }
+          updateState({ ...state, expenses: [...state.expenses, localExpense] })
+          return id
+        }else{
+          const txt = await res.text()
+          console.error('Server returned error inserting gasto:', txt)
+        }
+      }
+    }catch(e){
+      console.error('Error persisting gasto to server:', e)
+    }
+
+    // Fallback to local-only behavior
     const id = nextId(state.expenses)
     const newExpense = { id, ...expense }
     updateState({ ...state, expenses: [...state.expenses, newExpense] })
+    return id
   }
 
   const deleteExpense = (id) => {

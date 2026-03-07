@@ -6,6 +6,7 @@ import { formatMoney } from '../lib/data'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { supabase } from '../lib/supabaseClient'
 
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024
 
@@ -99,7 +100,47 @@ export default function DocumentsPage(){
     try{
       setSaving(true)
       setErrorMsg('')
+
+      // read file as data URL and extract base64 payload
       const fileDataUrl = await readFileAsDataUrl(selectedFile)
+      const base64 = String(fileDataUrl || '').split(',')[1] || null
+
+      let serverUrl = null
+
+      // Try to upload to server (/api/upload) when user is signed-in
+      try{
+        let token = null
+        if (supabase?.auth?.getSession) {
+          const { data } = await supabase.auth.getSession()
+          token = data?.session?.access_token
+        } else if (supabase?.auth?.session) {
+          const s = supabase.auth.session()
+          token = s?.access_token || s?.accessToken
+        }
+
+        if(token && base64){
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ filename: selectedFile.name, contentType: selectedFile.type, base64 })
+          })
+
+          if(res.ok){
+            const json = await res.json()
+            serverUrl = json.publicUrl || null
+          } else {
+            console.warn('Upload failed, falling back to local storage')
+          }
+        }
+      }catch(uErr){
+        console.warn('Upload to server failed:', uErr)
+      }
+
+      // prefer serverUrl; otherwise keep the local data URL
+      const storedUrl = serverUrl || fileDataUrl
 
       addHouseDocument({
         title: title.trim(),
@@ -112,7 +153,7 @@ export default function DocumentsPage(){
         file_name: selectedFile.name,
         file_type: selectedFile.type || 'application/octet-stream',
         file_size: selectedFile.size,
-        file_data_url: fileDataUrl
+        file_data_url: storedUrl
       })
 
       setTitle('')

@@ -25,7 +25,7 @@ function daysUntilNextCharge(targetDay){
 
 function daysTrafficClass(days){
   if(Number(days) < 3) return 'text-red-300'
-  if(Number(days) >= 7) return 'text-emerald-300'
+  if(Number(days) >= 7) return 'text-white'
   return 'text-amber-300'
 }
 

@@ -104,7 +104,7 @@ export default function DashboardPage(){
                   </div>
                   <div className="rounded-xl bg-[var(--card)] px-4 py-4 text-center flex flex-col items-center justify-center min-h-[92px]">
                     <div className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text)', opacity: 0.8 }}>Variación mensual</div>
-                    <div className={`text-base sm:text-lg font-semibold mt-1 text-center ${trendPercent === null ? '' : trendPercent > 0 ? 'text-green-400' : trendPercent < 0 ? 'text-red-400' : ''}`}>
+                    <div className={`text-base sm:text-lg font-semibold mt-1 text-center ${trendPercent === null ? '' : trendPercent > 0 ? 'text-white' : trendPercent < 0 ? 'text-red-400' : ''}`}>
                       {trendPercent === null ? '—' : `${trendPercent > 0 ? '+' : ''}${trendPercent.toFixed(1)}%`}
                     </div>
                   </div>
@@ -169,7 +169,7 @@ export default function DashboardPage(){
                       </div>
                       <div className="rounded-lg bg-[var(--card)] px-4 py-3 text-center flex flex-col items-center justify-center min-h-[88px]">
                         <div className="text-[11px]" style={{ color: 'var(--muted)' }}>Mes comparado</div>
-                        <div className={`text-base font-semibold mt-1 text-center ${monthlyDifference > 0 ? 'text-green-400' : monthlyDifference < 0 ? 'text-red-400' : ''}`}>
+                        <div className={`text-base font-semibold mt-1 text-center ${monthlyDifference > 0 ? 'text-white' : monthlyDifference < 0 ? 'text-red-400' : ''}`}>
                           {monthlyDifference > 0 ? '+' : ''}{formatMoney(monthlyDifference)}
                         </div>
                       </div>
