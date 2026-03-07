@@ -2,9 +2,5 @@
   "version": 2,
   "builds": [
     { "src": "nextjs-app/package.json", "use": "@vercel/next" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
