@@ -30,9 +30,19 @@ export default function RegisterModal({ open, onOpenChange }){
     }
     setLoading(true)
     try{
-      // Conectar a backend / Supabase si se desea más adelante
-      await new Promise(r => setTimeout(r, 600))
-      close()
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      })
+      const body = await res.json()
+      if(!res.ok) {
+        setError(body?.error || 'Error al registrarse')
+        setLoading(false)
+        return
+      }
+      // Successfully registered and session cookie set; redirect to dashboard
+      window.location.href = '/dashboard'
     }catch(err){
       setError('Error al registrarse')
     }finally{
