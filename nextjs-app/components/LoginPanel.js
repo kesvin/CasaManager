@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import RegisterModal from './RegisterModal'
 
 export default function LoginPanel({ onSuccess }){
   const [email, setEmail] = useState('')
@@ -6,6 +7,7 @@ export default function LoginPanel({ onSuccess }){
   const [show, setShow] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [registerOpen, setRegisterOpen] = useState(false)
 
   async function handleSubmit(e){
     e.preventDefault()
@@ -93,8 +95,9 @@ export default function LoginPanel({ onSuccess }){
           )}
         </button>
 
-        <div className="mt-3 text-center text-sm text-[var(--muted)]">Nuevo en CasaManager? <a href="/signup" className="text-white font-semibold">Crear cuenta</a></div>
+        <div className="mt-3 text-center text-sm text-[var(--muted)]">Nuevo en CasaManager? <button type="button" onClick={()=>setRegisterOpen(true)} className="text-white font-semibold">Crear cuenta</button></div>
       </form>
+      <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} />
     </div>
   )
 }

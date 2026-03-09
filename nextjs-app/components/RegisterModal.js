@@ -1,0 +1,81 @@
+"use client"
+
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog'
+import { Input } from './ui/input'
+import { Button } from './ui/button'
+
+export default function RegisterModal({ open, onOpenChange }){
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  function close(){
+    onOpenChange && onOpenChange(false)
+  }
+
+  async function handleSubmit(e){
+    e.preventDefault()
+    setError('')
+    if(!email || !password || !name){
+      setError('Completa todos los campos')
+      return
+    }
+    if(password !== confirm){
+      setError('Las contraseñas no coinciden')
+      return
+    }
+    setLoading(true)
+    try{
+      // Conectar a backend / Supabase si se desea más adelante
+      await new Promise(r => setTimeout(r, 600))
+      close()
+    }catch(err){
+      setError('Error al registrarse')
+    }finally{
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Crear cuenta</DialogTitle>
+          <div className="text-sm text-[var(--muted)]">Regístrate para usar CasaManager</div>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+          <div>
+            <label className="text-xs text-[var(--muted)]">Nombre</label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Tu nombre" />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--muted)]">Email</label>
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-[var(--muted)]">Contraseña</label>
+              <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Contraseña" />
+            </div>
+            <div>
+              <label className="text-xs text-[var(--muted)]">Repetir</label>
+              <Input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite la contraseña" />
+            </div>
+          </div>
+
+          {error && <div className="text-sm text-red-400">{error}</div>}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={close}>Cancelar</Button>
+            <Button type="submit" variant="success" disabled={loading}>{loading ? 'Creando...' : 'Crear cuenta'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
