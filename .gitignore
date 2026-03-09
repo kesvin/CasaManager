@@ -22,3 +22,4 @@ nextjs-app/node_modules/
 nextjs-app/.next/
 nextjs-app/.git.embedded.bak/
 
+.env*.local

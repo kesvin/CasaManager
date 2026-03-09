@@ -63,10 +63,11 @@ export default function App({ Component, pageProps }){
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <!-- favicon and manifest removed to avoid server-side asset access issues -->
+        {/* favicon and manifest removed to avoid server-side asset access issues */}
         <meta name="application-name" content="CasaManager" />
         <meta name="apple-mobile-web-app-title" content="CasaManager" />
         <meta name="theme-color" content="#000000" />
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
       {showSplash ? (
         <div className="app-splash" role="status" aria-live="polite" aria-label="Cargando aplicación">
