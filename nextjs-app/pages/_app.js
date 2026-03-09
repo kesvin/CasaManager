@@ -63,9 +63,7 @@ export default function App({ Component, pageProps }){
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="icon" href="/favicon.svg" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <!-- favicon and manifest removed to avoid server-side asset access issues -->
         <meta name="application-name" content="CasaManager" />
         <meta name="apple-mobile-web-app-title" content="CasaManager" />
         <meta name="theme-color" content="#000000" />
