@@ -175,10 +175,10 @@ export default function LandingPage(){
 						</div>
 
 												<div className="flex-shrink-0 w-full lg:w-[360px]">
-													<div className="block ml-auto">
-														{!user && <LoginPanel onSuccess={setUser} />}
-													</div>
-						</div>
+																			<div className="block ml-auto">
+																				{!user && <LoginPanel onSuccess={() => {}} />}
+																			</div>
+												</div>
 					</div>
 					</div>
 				</section>
