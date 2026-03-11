@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import RegisterModal from './RegisterModal'
+import ForgotPasswordModal from './ForgotPasswordModal'
 
 export default function LoginPanel({ onSuccess }){
   const [email, setEmail] = useState('')
@@ -8,6 +9,7 @@ export default function LoginPanel({ onSuccess }){
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [registerOpen, setRegisterOpen] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
 
   async function handleSubmit(e){
     e.preventDefault()
@@ -29,7 +31,7 @@ export default function LoginPanel({ onSuccess }){
       // If parent provided an onSuccess handler, call it with the verified user
       if (typeof onSuccess === 'function') {
         try {
-          const me = await fetch('/api/auth/me')
+          const me = await fetch('/api/auth/me', { credentials: 'include' })
             .then(r => r.json())
             .catch(() => null)
           if (me && me.ok && me.user) onSuccess(me.user)
@@ -50,7 +52,7 @@ export default function LoginPanel({ onSuccess }){
   }
 
   return (
-    <div className="bg-[#070707] p-6 md:p-8 rounded-2xl shadow-lg" style={{ borderLeft: '1px solid var(--border)' }}>
+    <div className="p-6 md:p-8 rounded-2xl border border-[var(--border)] shadow-[0_12px_30px_rgba(0,0,0,0.6)] bg-black/40 backdrop-blur-md" style={{ borderLeft: '1px solid var(--border)' }}>
       <form onSubmit={handleSubmit} className="w-full">
         <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Iniciar sesión</h3>
         <p className="text-sm text-[var(--muted)] mb-4">Accede a tu cuenta de CasaManager</p>
@@ -96,8 +98,10 @@ export default function LoginPanel({ onSuccess }){
         </button>
 
         <div className="mt-3 text-center text-sm text-[var(--muted)]">Nuevo en CasaManager? <button type="button" onClick={()=>setRegisterOpen(true)} className="text-white font-semibold">Crear cuenta</button></div>
+        <div className="mt-2 text-center text-sm text-[var(--muted)]"><button type="button" onClick={()=>setForgotOpen(true)} className="text-[var(--muted)] underline">¿Olvidaste tu contraseña?</button></div>
       </form>
       <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} />
+      <ForgotPasswordModal open={forgotOpen} onOpenChange={setForgotOpen} />
     </div>
   )
 }

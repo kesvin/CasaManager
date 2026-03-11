@@ -14,17 +14,20 @@ export default function AccountsPage(){
   return (
     <div className="container">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {state.accounts.map(a => (
-          <Card key={a.id}>
-            <CardHeader>
-              <CardTitle>{`${a.name === 'Efectivo' ? '💵 ' : a.name === 'Tarjeta' ? '💳 ' : '🏦 '}${a.name}`}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-semibold">{formatMoney(balances[a.id]||0)}</div>
-              <div className="text-sm text-[var(--muted)] mt-2">Movimientos recientes y detalles disponibles en Gastos.</div>
-            </CardContent>
-          </Card>
-        ))}
+        {state.accounts.map(a => {
+          const emoji = a.name === 'Efectivo' ? '💵 ' : a.name === 'Tarjeta' ? '💳 ' : (a.name === 'CuentaCompartida' || a.name === 'Cuenta Compartida') ? '🤝 ' : '🏦 '
+          return (
+            <Card key={a.id}>
+              <CardHeader>
+                <CardTitle>{`${emoji}${a.name}`}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-semibold">{formatMoney(balances[a.id]||0)}</div>
+                <div className="text-sm text-[var(--muted)] mt-2">Movimientos recientes y detalles disponibles en Gastos.</div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

@@ -36,7 +36,7 @@ export function defaultData(){
     const day = ((idx * 7 + 3) % dayMax) + 1
     const date = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     const owner_id = idx % 2 === 0 ? 1 : 2
-    const account_id = (idx % 2) + 1
+    const account_id = (idx % 3) + 1
     const category_id = ((idx * 3 + 2) % 10) + 1
     const amount = Number((18 + ((idx * 29.37) % 235)).toFixed(2))
     const pool = descriptionsByCategory[category_id]
@@ -54,31 +54,41 @@ export function defaultData(){
   })
 
   // Seed 10 owners
-  const ownerNames = ['Kevin','Alba','Luis','Marta','Sergio','Lucía','Carlos','Ana','David','Paula'];
-  const owners = ownerNames.map((name, idx) => ({
-    id: idx + 1,
-    name,
-    icon: idx % 2 === 0 ? 'male' : 'female',
-    monthly_income: 1500 + (idx * 100)
-  }));
+  const useServer = String(process.env.NEXT_PUBLIC_USE_SERVER || 'false') === 'true'
 
-  // Seed 10 budgets
-  const budgets = owners.map(o => ({ owner_id: o.id, amount: 500 + (o.id * 50) }));
+  // Seed owners/budgets/fixedExpenses only in local/demo mode.
+  // When using server persistence, keep these empty so the UI reflects server state.
+  let owners = []
+  let budgets = []
+  let fixedExpenses = []
 
-  // Seed 10 fixed expenses
-  const fixedExpenses = Array.from({ length: 10 }, (_, idx) => ({
-    id: idx + 1,
-    name: `Gasto fijo ${idx + 1}`,
-    amount: 50 + idx * 25,
-    day: (idx * 3) % 28 + 1,
-    account_id: (idx % 2) + 1,
-    owner_id: owners[(idx + 1) % owners.length].id,
-    category_id: ((idx * 2) % 10) + 1,
-    active: true
-  }));
+  if (!useServer) {
+    const ownerNames = ['Kevin','Alba','Luis','Marta','Sergio','Lucía','Carlos','Ana','David','Paula'];
+    owners = ownerNames.map((name, idx) => ({
+      id: idx + 1,
+      name,
+      icon: idx % 2 === 0 ? 'male' : 'female',
+      monthly_income: 1500 + (idx * 100)
+    }))
+
+    // Seed budgets from owners
+    budgets = owners.map(o => ({ owner_id: o.id, amount: 500 + (o.id * 50) }))
+
+    // Seed 10 fixed expenses linked to seeded owners
+    fixedExpenses = Array.from({ length: 10 }, (_, idx) => ({
+      id: idx + 1,
+      name: `Gasto fijo ${idx + 1}`,
+      amount: 50 + idx * 25,
+      day: (idx * 3) % 28 + 1,
+      account_id: (idx % 2) + 1,
+      owner_id: owners[(idx + 1) % owners.length].id,
+      category_id: ((idx * 2) % 10) + 1,
+      active: true
+    }))
+  }
 
   return {
-    accounts: [{id:1,name:'Efectivo'},{id:2,name:'Tarjeta'}],
+    accounts: [{id:1,name:'Efectivo'},{id:2,name:'Tarjeta'},{id:3,name:'CuentaCompartida'}],
     owners,
     categories,
     budgets,

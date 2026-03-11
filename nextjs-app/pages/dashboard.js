@@ -354,7 +354,7 @@ export default function DashboardPage(){
                       const balance = state.expenses
                         .filter(e => e.account_id === a.id)
                         .reduce((sum, e) => sum + Number(e.amount), 0)
-                      const accountLabel = `${a.name === 'Efectivo' ? '💵 ' : a.name === 'Tarjeta' ? '💳 ' : '🏦 '}${a.name}`
+                      const accountLabel = `${a.name === 'Efectivo' ? '💵 ' : a.name === 'Tarjeta' ? '💳 ' : (a.name === 'CuentaCompartida' || a.name === 'Cuenta Compartida') ? '🤝 ' : '🏦 '}${a.name}`
                       return (
                         <div key={a.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
                           <span className="text-sm">{accountLabel}</span>

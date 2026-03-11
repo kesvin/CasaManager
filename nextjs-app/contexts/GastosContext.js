@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { loadData, saveData, nextId, defaultData } from '../lib/data'
+import { loadData, nextId, defaultData } from '../lib/data'
 import { supabase } from '../lib/supabaseClient'
 
 const GastosContext = createContext(null)
@@ -16,10 +16,33 @@ export function GastosProvider({ children }){
       let loaded = null
       try{
         const useServer = String(process.env.NEXT_PUBLIC_USE_SERVER || 'false') === 'true'
-        if(useServer){
-          const res = await fetch('/api/state')
-          if(res.ok){
-            loaded = await res.json()
+        const hasSupabase = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+        if(useServer && hasSupabase && supabase){
+          // Load collections from Supabase and assemble state
+          const [ownersRes, cuentasRes, categoriesRes, budgetsRes, fixedRes, improvementsRes, docsRes, contactsRes, gastosRes] = await Promise.all([
+            supabase.from('owners').select('*'),
+            supabase.from('cuentas').select('*'),
+            supabase.from('categories').select('*'),
+            supabase.from('budgets').select('*'),
+            supabase.from('fixed_expenses').select('*'),
+            supabase.from('improvements').select('*'),
+            supabase.from('house_documents').select('*'),
+            supabase.from('house_contacts').select('*'),
+            supabase.from('gastos').select('*')
+          ])
+
+          const mapData = (r) => (r && r.data) ? r.data : []
+
+          loaded = {
+            owners: mapData(ownersRes),
+            accounts: mapData(cuentasRes),
+            categories: mapData(categoriesRes),
+            budgets: mapData(budgetsRes),
+            fixedExpenses: mapData(fixedRes),
+            improvements: mapData(improvementsRes),
+            houseDocuments: mapData(docsRes),
+            houseContacts: mapData(contactsRes),
+            expenses: mapData(gastosRes)
           }
         }
       }catch(e){
@@ -53,6 +76,15 @@ export function GastosProvider({ children }){
     }
       // ensure arrays exist
       const merged = { ...defaults, ...loaded }
+      // Deduplicate accounts by name (keep first occurrence) to avoid duplicate boxes
+      if(Array.isArray(merged.accounts)){
+        const seen = new Map()
+        merged.accounts.forEach(a => {
+          const name = String(a.name || '').trim()
+          if(!seen.has(name)) seen.set(name, a)
+        })
+        merged.accounts = Array.from(seen.values())
+      }
       setState(merged)
     }
 
@@ -60,8 +92,8 @@ export function GastosProvider({ children }){
   }, [])
 
   const updateState = (newState) => {
+    // Do not persist to localStorage. Server persistence is handled in individual actions.
     setState(newState)
-    saveData(newState)
   }
 
   // Actions
@@ -126,6 +158,12 @@ export function GastosProvider({ children }){
   const deleteExpense = (id) => {
     if(!state) return
     updateState({ ...state, expenses: state.expenses.filter(e=>e.id!==id) })
+    // Try to delete on server
+    try{
+      if(supabase){
+        supabase.from('gastos').delete().eq('id', id).then(r=>{ if(r.error) console.error('Supabase delete gasto error', r.error) })
+      }
+    }catch(e){ console.error('Error deleting gasto on server', e) }
   }
 
   const addAccount = (name) => {
@@ -214,18 +252,33 @@ export function GastosProvider({ children }){
       active: fixedExpense.active !== false
     }
     updateState({ ...state, fixedExpenses: [...(state.fixedExpenses || []), nextFixed] })
+    try{
+      if(supabase){
+        supabase.from('fixed_expenses').insert([nextFixed]).then(r=>{ if(r.error) console.error('Supabase insert fixed_expense error', r.error) })
+      }
+    }catch(e){ console.error('Error persisting fixed expense to server', e) }
   }
 
   const updateFixedExpense = (id, updates) => {
     if(!state) return
     const nextFixed = (state.fixedExpenses || []).map(item => item.id === id ? { ...item, ...updates } : item)
     updateState({ ...state, fixedExpenses: nextFixed })
+    try{
+      if(supabase){
+        supabase.from('fixed_expenses').update(updates).eq('id', id).then(r=>{ if(r.error) console.error('Supabase update fixed_expense error', r.error) })
+      }
+    }catch(e){ console.error('Error updating fixed expense on server', e) }
   }
 
   const deleteFixedExpense = (id) => {
     if(!state) return
     const nextFixed = (state.fixedExpenses || []).filter(item => item.id !== id)
     updateState({ ...state, fixedExpenses: nextFixed })
+    try{
+      if(supabase){
+        supabase.from('fixed_expenses').delete().eq('id', id).then(r=>{ if(r.error) console.error('Supabase delete fixed_expense error', r.error) })
+      }
+    }catch(e){ console.error('Error deleting fixed expense on server', e) }
   }
 
   const applyFixedExpensesForMonth = (monthValue) => {

@@ -281,9 +281,10 @@ export default function Header(){
                 <div className="actions-row">
                   <select value={selectedAccount} onChange={(e) => setSelectedAccount(e.target.value)} className="header-select" aria-label="Seleccionar cuenta">
                     <option value="all">Elegir cuenta...</option>
-                    {state.accounts.map(account => (
-                      <option key={account.id} value={String(account.id)}>{account.name}</option>
-                    ))}
+                    {state.accounts.map(account => {
+                      const emoji = account.name === 'Efectivo' ? '💵 ' : account.name === 'Tarjeta' ? '💳 ' : (account.name === 'CuentaCompartida' || account.name === 'Cuenta Compartida') ? '🤝 ' : '🏦 '
+                      return <option key={account.id} value={String(account.id)}>{`${emoji}${account.name}`}</option>
+                    })}
                   </select>
                   <Button variant="success" className="h-10 px-4 whitespace-nowrap" onClick={() => router.push('/expenses')}>＋ Añadir gasto</Button>
                 </div>

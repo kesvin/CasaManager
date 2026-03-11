@@ -43,7 +43,7 @@ export default function LandingPage(){
 
 	useEffect(()=>{
 		let mounted = true
-		fetch('/api/auth/me').then(r=>r.json()).then(data=>{
+		fetch('/api/auth/me', { credentials: 'include' }).then(r=>r.json()).then(data=>{
 			if(!mounted) return
 			if(data?.ok && data.user) setUser(data.user)
 		}).catch(()=>{})

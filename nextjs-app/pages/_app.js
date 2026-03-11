@@ -46,18 +46,42 @@ export default function App({ Component, pageProps }){
   }, [router])
 
   const isLandingPage = router.pathname === '/'
-  const { user, loading } = useSupabaseAuth()
 
-  // If not landing page and not authenticated, redirect to landing
-  useEffect(() => {
-    if(isLandingPage) return
-    if(loading) return
-    if(!user) router.replace('/')
-  }, [isLandingPage, loading, user, router])
+  // AuthGate will run inside the provider so the hook is available
+  function AuthGate({ children }){
+    const { user, loading } = useSupabaseAuth()
+    const [verified, setVerified] = useState(null)
+
+    // If supabase reports no user, verify session with server (HttpOnly cookie)
+    useEffect(() => {
+      if(isLandingPage) return
+      if(loading) return
+      if(user) { setVerified(true); return }
+
+      // Always check server session endpoint (cookie is HttpOnly and not visible to JS)
+      fetch('/api/auth/me', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          if(data && data.ok && data.user) setVerified(true)
+          else setVerified(false)
+        })
+        .catch(() => setVerified(false))
+    }, [isLandingPage, loading, user])
+
+    useEffect(() => {
+      if(isLandingPage) return
+      if(loading) return
+      if(verified === null) return
+      if(!user && verified === false) router.replace('/')
+    }, [isLandingPage, loading, user, verified, router])
+
+    return children
+  }
 
   return (
     <SupabaseAuthProvider>
       <GastosProvider>
+        <AuthGate>
       <Head>
         <title>CasaManager</title>
         <meta name="robots" content="noindex, nofollow" />
@@ -113,6 +137,7 @@ export default function App({ Component, pageProps }){
           50% { transform: scale(1.04); opacity: 1; }
         }
       `}</style>
+        </AuthGate>
       </GastosProvider>
     </SupabaseAuthProvider>
   )

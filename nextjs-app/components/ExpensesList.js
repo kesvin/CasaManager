@@ -246,9 +246,8 @@ export default function ExpensesList({
   })
 
   const handleDelete = (id) => {
-    if(confirm('¿Eliminar este gasto?')){
-      deleteExpense(id)
-    }
+    // Delete without confirmation as requested
+    deleteExpense(id)
   }
 
   const renderMobileExpenseCard = (e) => {
