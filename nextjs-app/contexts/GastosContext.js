@@ -59,6 +59,12 @@ export function GastosProvider({ children }){
         monthly_income: Number(owner.monthly_income || 0)
       }))
     }
+    // ensure accounts have an icon property
+    if(!loaded.accounts || loaded.accounts.length === 0){
+      loaded.accounts = defaults.accounts || []
+    }else{
+      loaded.accounts = loaded.accounts.map(a => ({ ...a, icon: a.icon || '' }))
+    }
     if(!loaded.budgets || loaded.budgets.length === 0){
       loaded.budgets = defaults.budgets
     }
@@ -73,6 +79,12 @@ export function GastosProvider({ children }){
     }
     if(!loaded.houseContacts || !Array.isArray(loaded.houseContacts) || loaded.houseContacts.length === 0){
       loaded.houseContacts = defaults.houseContacts || []
+    }
+    // ensure categories have an icon property
+    if(!loaded.categories || loaded.categories.length === 0){
+      loaded.categories = defaults.categories || []
+    }else{
+      loaded.categories = loaded.categories.map(c => ({ ...c, icon: c.icon || '' }))
     }
       // ensure arrays exist
       const merged = { ...defaults, ...loaded }
@@ -166,17 +178,40 @@ export function GastosProvider({ children }){
     }catch(e){ console.error('Error deleting gasto on server', e) }
   }
 
-  const addAccount = (name) => {
+  const addAccount = (name, icon='') => {
     if(!state) return
     const id = nextId(state.accounts)
-    updateState({ ...state, accounts: [...state.accounts, { id, name }] })
+    const account = { id, name, icon }
+    updateState({ ...state, accounts: [...state.accounts, account] })
+
+    // Try to persist to server in background if Supabase is configured
+    try{
+      if(supabase){
+        supabase.from('cuentas').insert([{ name: String(name || '').trim(), icon: icon || null }]).then(r=>{
+          if(r.error) console.error('Supabase insert cuenta error', r.error)
+        })
+      }
+    }catch(e){ console.error('Error persisting cuenta to server', e) }
+
+    return id
   }
 
-  const addCategory = (name) => {
+  const addCategory = (name, icon='') => {
     if(!state) return
     const id = nextId(state.categories)
     const nextName = String(name || '').trim()
-    updateState({ ...state, categories: [...state.categories, { id, name: nextName }] })
+    const category = { id, name: nextName, icon }
+    updateState({ ...state, categories: [...state.categories, category] })
+
+    // Try to persist to server in background if Supabase is configured
+    try{
+      if(supabase){
+        supabase.from('categories').insert([{ name: nextName, icon: icon || null }]).then(r=>{
+          if(r.error) console.error('Supabase insert category error', r.error)
+        })
+      }
+    }catch(e){ console.error('Error persisting category to server', e) }
+
     return id
   }
 

@@ -185,7 +185,7 @@ export default function FixedExpensesManager(){
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="success" onClick={handleAdd}>Añadir gasto fijo</Button>
+          <Button variant="success" onClick={handleAdd} className="w-full h-10 text-base font-semibold">Añadir gasto fijo</Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">

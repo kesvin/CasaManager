@@ -7,7 +7,14 @@ import { useRouter } from 'next/router'
 
 function HeaderSession({ user, onLogout }){
 	const [open, setOpen] = useState(false)
-	const initials = (user && (user.name || user.email)) ? (user.name ? user.name.split(' ').map(n=>n[0]).slice(0,2).join('') : user.email[0]).toUpperCase() : '?'
+	function displayName(u){
+		if(!u) return '?'
+		if(u.name) return u.name
+		if(u.email) return u.email.split('@')[0]
+		return '?'
+	}
+	const dname = displayName(user)
+	const initials = (dname && dname !== '?') ? dname.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() : '?'
 
 	async function handleLogout(){
 		try{
@@ -24,7 +31,7 @@ function HeaderSession({ user, onLogout }){
 			<button onClick={()=>setOpen(s=>!s)} className="inline-flex items-center gap-3 px-3 py-1.5 rounded-full hover:bg-white/5 transition-colors">
 				<div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold text-white" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>{initials}</div>
 				<div className="text-left leading-none">
-					<div className="text-sm font-semibold text-white/95">{user.name || user.email}</div>
+					<div className="text-sm font-semibold text-white/95 truncate max-w-[160px]">{dname}</div>
 					<div className="text-xs text-[var(--muted)]">Sesión activa</div>
 				</div>
 				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
@@ -57,6 +64,7 @@ export default function LandingPage(){
 
 		const isLogged = Boolean(user || sessionUser)
 		const activeUser = user || sessionUser
+
 
 
 	// prevent background scrolling when mobile menu is open
@@ -136,8 +144,8 @@ export default function LandingPage(){
 														{isLogged ? (
 															<div className="flex items-center justify-between">
 																<div className="flex items-center gap-3">
-																	<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>{(activeUser.name||activeUser.email||'?')[0]}</div>
-																	<div className="text-sm font-semibold text-white/95">{activeUser.name || activeUser.email}</div>
+																	<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>{(activeUser && (activeUser.name || activeUser.email) ? (activeUser.name ? activeUser.name.split(' ')[0][0] : activeUser.email.split('@')[0][0]) : '?')}</div>
+																	<div className="text-sm font-semibold text-white/95 truncate max-w-[160px]">{activeUser ? (activeUser.name || (activeUser.email && activeUser.email.split('@')[0])) : '?'}</div>
 																</div>
 																<button onClick={async ()=>{ await fetch('/api/auth/logout',{ method: 'POST' }); setSessionUser(null); setMobileOpen(false); }} className="text-sm text-white/90 px-3 py-1.5 rounded hover:bg-white/5">Cerrar sesión</button>
 															</div>
@@ -167,7 +175,7 @@ export default function LandingPage(){
 							</p>
 
 							<div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto max-w-[320px] sm:max-w-none">
-								{user ? (
+								{isLogged ? (
 									<Link href="/expenses" className="w-full sm:w-auto text-center rounded-full text-red-50 font-extrabold text-[13px] px-5 py-2.5 shadow-[0_8px_22px_rgba(227,20,103,0.42)] border border-[var(--border)] transition-colors" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>
 										Añadir gasto rápido ↗
 									</Link>
@@ -177,7 +185,7 @@ export default function LandingPage(){
 									</button>
 								)}
 
-								{user ? (
+								{isLogged ? (
 									<Link href="/dashboard" className="w-full sm:w-auto text-center rounded-full border border-[var(--border)] bg-black/70 text-[var(--text)] font-extrabold text-[13px] px-5 py-2.5 hover:bg-[rgba(227,20,103,0.42)] hover:border-[rgba(227,20,103,0.42)] transition-colors">
 										Abrir dashboard
 									</Link>
@@ -192,7 +200,7 @@ export default function LandingPage(){
 
 												<div className="flex-shrink-0 w-full lg:w-[360px]">
 																			<div className="block ml-auto">
-																				{!user && <LoginPanel onSuccess={setSessionUser} />}
+																				{!isLogged && <LoginPanel onSuccess={setSessionUser} />}
 																			</div>
 												</div>
 					</div>

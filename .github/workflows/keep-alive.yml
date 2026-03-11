@@ -17,5 +17,11 @@ jobs:
             echo "Missing secret KEEP_ALIVE_URL. Set it to https://your-app.vercel.app/api/keepalive"
             exit 1
           fi
-          echo "Pinging $KEEP_ALIVE_URL"
-          curl -fsS "$KEEP_ALIVE_URL" || (echo 'Ping failed' && exit 1)
+          # Basic validation: must start with http:// or https:// (do not print secret)
+          if ! echo "$KEEP_ALIVE_URL" | grep -E -q '^https?://'; then
+            echo "KEEP_ALIVE_URL does not look like a valid URL (must start with http:// or https://)"
+            exit 1
+          fi
+          echo "Pinging keep-alive endpoint"
+          # Use curl safely; retry once on transient failures
+          curl -fsS --retry 1 --retry-delay 2 "$KEEP_ALIVE_URL" || (echo 'Ping failed' && exit 1)

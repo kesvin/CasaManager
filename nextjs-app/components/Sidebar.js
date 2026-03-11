@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -20,6 +20,10 @@ function Icon({ name }){
 
 export default function Sidebar({ collapsed=false }){
   const [open, setOpen] = useState(true)
+  const [user, setUser] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef()
+  const [menuDirectionUp, setMenuDirectionUp] = useState(false)
 
   useEffect(()=>{
     try{
@@ -28,6 +32,40 @@ export default function Sidebar({ collapsed=false }){
       else setOpen(!collapsed)
     }catch(e){}
   }, [collapsed])
+
+  useEffect(()=>{
+    const fetchUser = async () => {
+      try{
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if(res.ok){
+          const json = await res.json()
+          if(json?.user) setUser(json.user)
+        }
+      }catch(e){/* ignore */}
+    }
+    fetchUser()
+  }, [])
+
+  useEffect(()=>{
+    const onDoc = (e) => {
+      if(menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    const onResize = () => setMenuOpen(false)
+    document.addEventListener('click', onDoc)
+    window.addEventListener('resize', onResize)
+    return () => { document.removeEventListener('click', onDoc); window.removeEventListener('resize', onResize) }
+  }, [])
+
+  useEffect(()=>{
+    if(!menuOpen || !menuRef.current) return
+    // compute whether there's enough space below; if not, open upwards
+    const rect = menuRef.current.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const spaceAbove = rect.top
+    // approximate menu height 120px
+    const needed = 120
+    setMenuDirectionUp(spaceBelow < needed && spaceAbove > spaceBelow)
+  }, [menuOpen])
 
   useEffect(()=>{
     try{ localStorage.setItem('gc_sidebar_open', open ? '1' : '0') }catch(e){}
@@ -88,9 +126,30 @@ export default function Sidebar({ collapsed=false }){
       </nav>
 
       <div className="sidebar-footer">
-        <div className="profile">
-          <div className="avatar">KS</div>
-          {open && <div className="profile-info"><div className="name">Kevin</div><div className="role">Titular</div></div>}
+        <div className="profile" ref={menuRef}>
+          <div className="avatar">{(user?.email || 'K').slice(0,2).toUpperCase()}</div>
+          {open && (
+            <div style={{position:'relative'}} className="profile-info">
+              <div className="name">{user?.name || (user?.email ? user.email.split('@')[0] : 'Kevin')}</div>
+              <div className="role" style={{display:'flex',alignItems:'center',gap:8}}>
+                <span>Sesión activa</span>
+                <button onClick={(e)=>{ e.stopPropagation(); setMenuOpen(s=>!s) }} className="dropdown-toggle" aria-expanded={menuOpen} style={{background:'transparent',border:0,color:'var(--muted)',cursor:'pointer'}}>
+                  ▾
+                </button>
+                {menuOpen && (
+                  <div className="profile-menu" style={{position:'absolute',left:0,background:'var(--card)',border:'1px solid var(--border)',padding:8,borderRadius:8,zIndex:40,
+                    ...(menuDirectionUp ? { bottom: 'calc(100% + 8px)' } : { top: 'calc(100% + 8px)' })
+                  }}>
+                    <button className="btn-logout" onClick={async ()=>{
+                      try{ await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }) }catch(e){}
+                      setUser(null)
+                      window.location.reload()
+                    }} style={{display:'block',width:'100%',textAlign:'left',padding:'6px 8px',background:'transparent',border:0,color:'var(--text)',cursor:'pointer'}}>Cerrar sesión</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <style jsx>{`

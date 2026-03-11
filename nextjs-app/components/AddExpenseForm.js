@@ -12,8 +12,11 @@ import { Label } from './ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog'
 
 export default function AddExpenseForm(){
-  const { state, addExpense, addCategory, deleteCategory } = useGastos()
+  const { state, addExpense, addCategory, deleteCategory, addAccount } = useGastos()
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryIcon, setNewCategoryIcon] = useState('🏷️')
+  const [newAccountName, setNewAccountName] = useState('')
+  const [newAccountIcon, setNewAccountIcon] = useState('💶')
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState(null)
   const [form, setForm] = useState({
     account_id: state.accounts[0]?.id || 1,
@@ -58,10 +61,11 @@ export default function AddExpenseForm(){
       return
     }
 
-    const createdId = addCategory(categoryName)
+    const createdId = addCategory(categoryName, newCategoryIcon)
     if(createdId){
       setForm(current => ({ ...current, category_id: String(createdId) }))
       setNewCategoryName('')
+      setNewCategoryIcon('🏷️')
       toast.success('Categoría creada y seleccionada.')
     }
   }
@@ -110,7 +114,7 @@ export default function AddExpenseForm(){
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-4">
             <Label className="block mb-2">Cuenta</Label>
             <Select 
               value={form.account_id}
@@ -119,6 +123,34 @@ export default function AddExpenseForm(){
             >
               {state.accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </Select>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-[1fr_56px_auto] gap-2 items-stretch">
+              <Input
+                type="text"
+                placeholder="Nueva cuenta"
+                value={newAccountName}
+                onChange={(e) => setNewAccountName(e.target.value)}
+                className="w-full h-9"
+              />
+              <Select value={newAccountIcon} onChange={(e)=>setNewAccountIcon(e.target.value)} className="h-9">
+                <option value="💶">💶</option>
+                <option value="💳">💳</option>
+                <option value="🏦">🏦</option>
+                <option value="🪙">🪙</option>
+                <option value="💰">💰</option>
+                <option value="🏧">🏧</option>
+              </Select>
+              <Button type="button" variant="success" onClick={() => {
+                const name = String(newAccountName||'').trim()
+                if(!name){ toast.error('Escribe un nombre para la cuenta.'); return }
+                const exists = state.accounts.find(c => String(c.name||'').toLowerCase() === name.toLowerCase())
+                if(exists){ setForm(current => ({ ...current, account_id: exists.id })); setNewAccountName(''); toast.success('La cuenta ya existía y quedó seleccionada.'); return }
+                const newId = addAccount(name, newAccountIcon)
+                if(newId) setForm(current => ({ ...current, account_id: newId }))
+                setNewAccountName('')
+                setNewAccountIcon('💶')
+                toast.success('Cuenta creada y seleccionada.')
+              }} className="h-9 px-3">Crear</Button>
+            </div>
           </div>
 
           <div className="lg:col-span-2">
@@ -144,7 +176,7 @@ export default function AddExpenseForm(){
             />
           </div>
 
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-4">
             <Label className="block mb-2">Categoría</Label>
             <Select 
               value={form.category_id}
@@ -154,7 +186,7 @@ export default function AddExpenseForm(){
               <option value="">(sin categoría)</option>
               {state.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-stretch">
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-[1fr_56px_auto_auto] gap-2 items-stretch">
               <Input
                 type="text"
                 placeholder="Nueva categoría"
@@ -162,6 +194,14 @@ export default function AddExpenseForm(){
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 className="w-full h-9"
               />
+              <Select value={newCategoryIcon} onChange={(e)=>setNewCategoryIcon(e.target.value)} className="h-9">
+                <option value="🏷️">🏷️</option>
+                <option value="🧾">🧾</option>
+                <option value="🍽️">🍽️</option>
+                <option value="🛒">🛒</option>
+                <option value="🚗">🚗</option>
+                <option value="🏠">🏠</option>
+              </Select>
               <Button type="button" variant="success" onClick={handleCreateCategory} className="h-9 px-3">
                 Crear
               </Button>

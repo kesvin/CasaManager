@@ -12,8 +12,8 @@ export default function ExpensesPage(){
             <CardTitle>Todos los gastos</CardTitle>
             <CardDescription>Visualiza y añade todos los gastos mensuales y únicos de la casa.</CardDescription>
           </CardHeader>
-          <FixedExpensesManager />
           <AddExpenseForm />
+          <FixedExpensesManager />
         </div>
       </div>
     </div>
