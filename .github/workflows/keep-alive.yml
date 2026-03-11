@@ -1,0 +1,21 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keepalive endpoint
+        env:
+          KEEP_ALIVE_URL: ${{ secrets.KEEP_ALIVE_URL }}
+        run: |
+          if [ -z "$KEEP_ALIVE_URL" ]; then
+            echo "Missing secret KEEP_ALIVE_URL. Set it to https://your-app.vercel.app/api/keepalive"
+            exit 1
+          fi
+          echo "Pinging $KEEP_ALIVE_URL"
+          curl -fsS "$KEEP_ALIVE_URL" || (echo 'Ping failed' && exit 1)
