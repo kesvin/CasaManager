@@ -24,8 +24,8 @@ export default function SupabaseAuthUpload(){
   async function sendMagicLink(e){
     e.preventDefault()
     setMessage('Enviando enlace...')
-    // Ensure redirect returns to the same origin where the user requested the login
-    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+    // Ensure redirect returns to the same page where the user requested the login
+    const redirectTo = typeof window !== 'undefined' ? window.location.href : undefined
     let resp
     try {
       resp = await supabase.auth.signInWithOtp({ email }, { redirectTo })

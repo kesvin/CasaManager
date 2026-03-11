@@ -2,6 +2,7 @@ import Link from 'next/link'
 import AppLogo from '../components/AppLogo'
 import LoginPanel from '../components/LoginPanel'
 import { useState, useEffect } from 'react'
+import { useSupabaseAuth } from '../contexts/SupabaseAuth'
 
 function HeaderSession({ user, onLogout }){
 	const [open, setOpen] = useState(false)
@@ -38,17 +39,9 @@ function HeaderSession({ user, onLogout }){
 }
 
 export default function LandingPage(){
-	const [user, setUser] = useState(null)
+	const { user, loading } = useSupabaseAuth()
 	const [mobileOpen, setMobileOpen] = useState(false)
 
-	useEffect(()=>{
-		let mounted = true
-		fetch('/api/auth/me', { credentials: 'include' }).then(r=>r.json()).then(data=>{
-			if(!mounted) return
-			if(data?.ok && data.user) setUser(data.user)
-		}).catch(()=>{})
-		return ()=>{ mounted = false }
-	}, [])
 
 	// prevent background scrolling when mobile menu is open
 	useEffect(()=>{
