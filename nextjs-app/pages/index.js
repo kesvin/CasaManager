@@ -55,11 +55,20 @@ export default function LandingPage(){
 		// Fetch server-side session (HttpOnly cookie) to reflect login state
 		useEffect(()=>{
 			let mounted = true
-			fetch('/api/auth/me', { credentials: 'include' })
-				.then(r=>r.json())
-				.then(data=>{ if(!mounted) return; if(data?.ok && data.user) setSessionUser(data.user) })
-				.catch(()=>{})
-			return ()=>{ mounted = false }
+			const fetchSession = async () => {
+				try{
+					const r = await fetch('/api/auth/me', { credentials: 'include' })
+					if(!mounted) return
+					const data = await r.json()
+					if(data?.ok && data.user) setSessionUser(data.user)
+					else setSessionUser(null)
+				}catch(e){}
+			}
+			fetchSession()
+
+			const onSessionChanged = () => { try{ fetchSession() }catch(e){} }
+			window.addEventListener('casamanager:session-changed', onSessionChanged)
+			return ()=>{ mounted = false; window.removeEventListener('casamanager:session-changed', onSessionChanged) }
 		}, [])
 
 		const isLogged = Boolean(user || sessionUser)

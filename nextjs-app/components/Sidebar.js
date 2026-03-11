@@ -40,10 +40,17 @@ export default function Sidebar({ collapsed=false }){
         if(res.ok){
           const json = await res.json()
           if(json?.user) setUser(json.user)
+          else setUser(null)
         }
       }catch(e){/* ignore */}
     }
     fetchUser()
+
+    const onSessionChanged = () => {
+      try{ fetchUser() }catch(e){}
+    }
+    window.addEventListener('casamanager:session-changed', onSessionChanged)
+    return () => { window.removeEventListener('casamanager:session-changed', onSessionChanged) }
   }, [])
 
   useEffect(()=>{

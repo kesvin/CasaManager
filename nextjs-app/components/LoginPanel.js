@@ -35,6 +35,8 @@ export default function LoginPanel({ onSuccess }){
             .then(r => r.json())
             .catch(() => null)
           if (me && me.ok && me.user) onSuccess(me.user)
+          // notify other client components that session state changed
+          try{ window.dispatchEvent(new Event('casamanager:session-changed')) }catch(e){}
         } catch (e) {
           console.error('failed to fetch /api/auth/me after login', e)
         }
