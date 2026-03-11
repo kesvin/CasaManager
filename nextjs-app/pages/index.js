@@ -55,6 +55,9 @@ export default function LandingPage(){
 			return ()=>{ mounted = false }
 		}, [])
 
+		const isLogged = Boolean(user || sessionUser)
+		const activeUser = user || sessionUser
+
 
 	// prevent background scrolling when mobile menu is open
 	useEffect(()=>{
@@ -98,45 +101,45 @@ export default function LandingPage(){
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
 						</button>
 						<nav className="hidden lg:flex flex-wrap justify-center md:justify-end items-center gap-x-4 gap-y-2 md:gap-x-6 text-slate-300 text-xs font-semibold leading-none" aria-label="Navegación principal">
-							<Link href="/dashboard" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Panel</Link>
-							<Link href="/expenses" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Gastos</Link>
-							<Link href="/accounts" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Cuentas</Link>
-							<Link href="/improvements" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Mejoras</Link>
-							<Link href="/reports" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Informes</Link>
-							<Link href="/admin" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Administrar</Link>
-							<Link href="/documents" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Documentos</Link>
-							<Link href="/contacts" className={`transition-colors hover:text-red-300 ${!user ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }}>Contactos</Link>
+							<Link href="/dashboard" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Panel</Link>
+							<Link href="/expenses" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Gastos</Link>
+							<Link href="/accounts" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Cuentas</Link>
+							<Link href="/improvements" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Mejoras</Link>
+							<Link href="/reports" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Informes</Link>
+							<Link href="/admin" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Administrar</Link>
+							<Link href="/documents" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Documentos</Link>
+							<Link href="/contacts" className={`transition-colors hover:text-red-300 ${!isLogged ? 'opacity-50' : 'pointer-events-auto'}`} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }}>Contactos</Link>
 						</nav>
 
 						                        {/* Session block: separated from nav visually */}
-						                        <div className="hidden lg:flex items-center justify-end md:ml-4 md:pl-4 md:border-l md:border-[var(--border)]">
-													{user ? <HeaderSession user={user} onLogout={()=>{ setUser(null) }} /> : null}
-												</div>
+												<div className="hidden lg:flex items-center justify-end md:ml-4 md:pl-4 md:border-l md:border-[var(--border)]">
+																			{isLogged ? <HeaderSession user={activeUser} onLogout={()=>{ fetch('/api/auth/logout',{ method: 'POST' }).then(()=>setSessionUser(null)).catch(()=>setSessionUser(null)) }} /> : null}
+																		</div>
 					</header>
 
 										{/* Mobile / tablet menu panel (in-flow, pushes content down) */}
-										<div className={`lg:hidden w-full mt-3 transition-all duration-200 ease-in-out overflow-hidden ${mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'} ${user ? 'pointer-events-auto' : 'pointer-events-none'}`} aria-hidden={!mobileOpen}>
+										<div className={`lg:hidden w-full mt-3 transition-all duration-200 ease-in-out overflow-hidden ${mobileOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'} ${isLogged ? 'pointer-events-auto' : 'pointer-events-none'}`} aria-hidden={!mobileOpen}>
 											<div className="relative z-50 mx-auto max-w-[1030px] px-3">
 												<div className="relative z-50 bg-black/80 border border-[var(--border)] rounded-lg p-4">
-													<nav className={`flex flex-col gap-2 ${user ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+													<nav className={`flex flex-col gap-2 ${isLogged ? 'pointer-events-auto' : 'pointer-events-none'}`}>
 														{['/dashboard','/expenses','/accounts','/improvements','/reports','/admin','/documents','/contacts'].map((href, idx)=>{
 															const labels = ['Panel','Gastos','Cuentas','Mejoras','Informes','Administrar','Documentos','Contactos']
 															const label = labels[idx]
 															return (
-																<Link key={href} href={href} aria-disabled={!user} tabIndex={user ? 0 : -1} onClick={(e)=>{ if(!user) e.preventDefault() }} className={`block px-3 py-2 rounded text-sm font-semibold ${!user ? 'opacity-60 text-[var(--muted)] pointer-events-none' : 'text-slate-200 hover:text-red-300 pointer-events-auto'}`}>
+																<Link key={href} href={href} aria-disabled={!isLogged} tabIndex={isLogged ? 0 : -1} onClick={(e)=>{ if(!isLogged) e.preventDefault() }} className={`block px-3 py-2 rounded text-sm font-semibold ${!isLogged ? 'opacity-60 text-[var(--muted)] pointer-events-none' : 'text-slate-200 hover:text-red-300 pointer-events-auto'}`}>
 																	{label}
 																</Link>
 															)
 														})}
 													</nav>
 													<div className="mt-3 pt-3 border-t border-[var(--border)]">
-														{user ? (
+														{isLogged ? (
 															<div className="flex items-center justify-between">
 																<div className="flex items-center gap-3">
-																	<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>{(user.name||user.email||'?')[0]}</div>
-																	<div className="text-sm font-semibold text-white/95">{user.name || user.email}</div>
+																	<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold" style={{ background: 'linear-gradient(90deg, rgb(199 21 45), rgb(227 20 103))' }}>{(activeUser.name||activeUser.email||'?')[0]}</div>
+																	<div className="text-sm font-semibold text-white/95">{activeUser.name || activeUser.email}</div>
 																</div>
-																<button onClick={async ()=>{ await fetch('/api/auth/logout',{ method: 'POST' }); setUser(null); setMobileOpen(false); }} className="text-sm text-white/90 px-3 py-1.5 rounded hover:bg-white/5">Cerrar sesión</button>
+																<button onClick={async ()=>{ await fetch('/api/auth/logout',{ method: 'POST' }); setSessionUser(null); setMobileOpen(false); }} className="text-sm text-white/90 px-3 py-1.5 rounded hover:bg-white/5">Cerrar sesión</button>
 															</div>
 														) : (
 															<div className="text-center text-sm text-[var(--muted)]">No hay sesión activa</div>
