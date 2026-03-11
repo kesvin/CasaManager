@@ -3,6 +3,7 @@ import AppLogo from '../components/AppLogo'
 import LoginPanel from '../components/LoginPanel'
 import { useState, useEffect } from 'react'
 import { useSupabaseAuth } from '../contexts/SupabaseAuth'
+import { useRouter } from 'next/router'
 
 function HeaderSession({ user, onLogout }){
 	const [open, setOpen] = useState(false)
@@ -39,8 +40,20 @@ function HeaderSession({ user, onLogout }){
 }
 
 export default function LandingPage(){
-	const { user, loading } = useSupabaseAuth()
-	const [mobileOpen, setMobileOpen] = useState(false)
+		const { user, loading } = useSupabaseAuth()
+		const [mobileOpen, setMobileOpen] = useState(false)
+		const [sessionUser, setSessionUser] = useState(null)
+		const router = useRouter()
+
+		// Fetch server-side session (HttpOnly cookie) to reflect login state
+		useEffect(()=>{
+			let mounted = true
+			fetch('/api/auth/me', { credentials: 'include' })
+				.then(r=>r.json())
+				.then(data=>{ if(!mounted) return; if(data?.ok && data.user) setSessionUser(data.user) })
+				.catch(()=>{})
+			return ()=>{ mounted = false }
+		}, [])
 
 
 	// prevent background scrolling when mobile menu is open
@@ -176,7 +189,7 @@ export default function LandingPage(){
 
 												<div className="flex-shrink-0 w-full lg:w-[360px]">
 																			<div className="block ml-auto">
-																				{!user && <LoginPanel onSuccess={() => {}} />}
+																				{!user && <LoginPanel onSuccess={setSessionUser} />}
 																			</div>
 												</div>
 					</div>
