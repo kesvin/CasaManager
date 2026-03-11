@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 
-export default function RegisterModal({ open, onOpenChange }){
+export default function RegisterModal({ open, onOpenChange, onSuccess }){
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,8 +41,16 @@ export default function RegisterModal({ open, onOpenChange }){
         setLoading(false)
         return
       }
-      // Successfully registered and session cookie set; redirect to dashboard
-      window.location.href = '/dashboard'
+      // Successfully registered and session cookie set; notify parent and close modal
+      try {
+        if (typeof onSuccess === 'function') {
+          const me = await fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).catch(() => null)
+          if (me && me.ok && me.user) onSuccess(me.user)
+        }
+      } catch (e) {
+        // ignore
+      }
+      onOpenChange && onOpenChange(false)
     }catch(err){
       setError('Error al registrarse')
     }finally{

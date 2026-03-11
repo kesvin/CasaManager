@@ -100,7 +100,7 @@ export default function LoginPanel({ onSuccess }){
         <div className="mt-3 text-center text-sm text-[var(--muted)]">Nuevo en CasaManager? <button type="button" onClick={()=>setRegisterOpen(true)} className="text-white font-semibold">Crear cuenta</button></div>
         <div className="mt-2 text-center text-sm text-[var(--muted)]"><button type="button" onClick={()=>setForgotOpen(true)} className="text-[var(--muted)] underline">¿Olvidaste tu contraseña?</button></div>
       </form>
-      <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} />
+      <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} onSuccess={onSuccess} />
       <ForgotPasswordModal open={forgotOpen} onOpenChange={setForgotOpen} />
     </div>
   )
