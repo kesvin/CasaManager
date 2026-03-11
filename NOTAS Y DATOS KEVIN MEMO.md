@@ -1,0 +1,17 @@
+NOTAS Y DATOS KEVIN MEMO
+
+NEXT_PUBLIC_SUPABASE_URL=https://vskptuiocefcnhltwkof.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3B0dWlvY2VmY25obHR3a29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mzc4NzQsImV4cCI6MjA4ODIxMzg3NH0.qsmBUw7S1D3yAlEKtdq58gAkX6699GQN-Ne5hWhbpqQ
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZza3B0dWlvY2VmY25obHR3a29mIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjYzNzg3NCwiZXhwIjoyMDg4MjEzODc0fQ.V4N5LQnd9Hij8EHvAREhkf1r30zcEDdiLtsUHyCXeS8
+NEXT_PUBLIC_USE_SERVER=true
+
+
+
+
+
+
+los tokens de github: están en settings/developer settings y personal acces tokens/fine grained tokens y regenerate
+
+token de vercel: 
+
+https://vercel.com/account/settings/tokens
